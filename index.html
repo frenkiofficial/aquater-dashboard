@@ -269,7 +269,7 @@
       color: var(--text-muted);
     }
 
-    /* RUNNING TEXT (PAPAN INFORMASI/BERITA) */
+    /* RUNNING TEXT */
     .news-ticker-card {
       background: var(--card-bg);
       border-radius: 18px;
@@ -420,7 +420,7 @@
       </div>
     </div>
 
-    <!-- KOLOM INFORMASI / BERITA BERJALAN (RUNNING TEXT) -->
+    <!-- INFORMASI BERJALAN -->
     <div class="news-ticker-card">
       <div class="ticker-badge">
         <i class="fa-solid fa-bullhorn"></i> INFO AQUATER
@@ -445,7 +445,13 @@
       jeri: { name: "Jeri", min: 60, max: 95, days: [2, 3, 4, 5, 0] }
     };
 
-    // Algoritma simulasi penambahan acak yang natural & konsisten sepanjang jam operasional
+    // Menyimpan nilai terakhir agar terjamin HANYA BISA NAIK (Monotonik)
+    const lastDeliveredValues = {
+      alisber: 0,
+      jonathan: 0,
+      jeri: 0
+    };
+
     function getDailyTarget(driverKey, dateStr, min, max) {
       let hash = 0;
       const str = driverKey + dateStr;
@@ -454,23 +460,6 @@
       }
       const norm = Math.abs(hash % 1000) / 1000;
       return Math.floor(min + norm * (max - min + 1));
-    }
-
-    function getNaturalProgressCount(target, progress, driverKey, nowSeconds) {
-      if (progress <= 0) return 0;
-      if (progress >= 1) return target;
-
-      // Kurva dasar pergerakan pengantaran harian
-      const baseCurve = Math.pow(progress, 0.85);
-      let current = Math.floor(target * baseCurve);
-
-      // Fluktuasi acak mikro per menit (noise) agar perambahan terlihat tidak monoton seperti bot
-      const noiseSeed = (nowSeconds + driverKey.charCodeAt(0)) % 13;
-      if (noiseSeed > 8 && current < target) {
-        current = Math.min(target, current + 1);
-      }
-
-      return current;
     }
 
     function updateDashboard() {
@@ -525,10 +514,17 @@
           cardEl.style.opacity = '1';
 
           const dayTarget = getDailyTarget(key, dateStr, config.min, config.max);
-          const currentDelivered = getNaturalProgressCount(dayTarget, progress, key, now.getSeconds());
+          
+          // Kalkulasi murni berdasarkan progres waktu dari 07:45 ke 19:45
+          const rawDelivered = Math.floor(dayTarget * progress);
+          
+          // Kunci utama: pastikan nilai baru SELALU >= dari nilai sebelumnya
+          if (rawDelivered > lastDeliveredValues[key]) {
+            lastDeliveredValues[key] = rawDelivered;
+          }
 
-          valEl.innerText = currentDelivered;
-          grandTotalDelivered += currentDelivered;
+          valEl.innerText = lastDeliveredValues[key];
+          grandTotalDelivered += lastDeliveredValues[key];
         } else {
           badgeEl.innerText = 'Libur';
           badgeEl.className = 'status-badge off';
