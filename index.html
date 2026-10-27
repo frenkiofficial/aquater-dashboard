@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AQUATER - Real-time Live Dashboard</title>
+  <!-- Google Fonts: Plus Jakarta Sans -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <style>
+    :root {
+      --bg-color: #e6eef8;
+      --card-bg: #e6eef8;
+      --primary: #0088ff;
+      --primary-accent: #00c6ff;
+      --text-main: #2d3748;
+      --text-muted: #718096;
+      --clay-shadow: 12px 12px 24px #c2cee0, -12px -12px 24px #ffffff;
+      --clay-shadow-sm: 6px 6px 12px #c2cee0, -6px -6px 12px #ffffff;
+      --clay-inset: inset 6px 6px 12px #c2cee0, inset -6px -6px 12px #ffffff;
+      --clay-card-radius: 30px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+    }
+
+    body {
+      background-color: var(--bg-color);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 2rem 1rem;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 1100px;
+    }
+
+    /* HEADER */
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: var(--card-bg);
+      padding: 1.25rem 2rem;
+      border-radius: var(--clay-card-radius);
+      box-shadow: var(--clay-shadow);
+      margin-bottom: 2rem;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand-icon {
+      width: 48px;
+      height: 48px;
+      background: linear-gradient(135deg, #0088ff, #00c6ff);
+      color: white;
+      border-radius: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.4rem;
+      box-shadow: 4px 4px 10px rgba(0, 136, 255, 0.3);
+    }
+
+    .brand h1 {
+      font-size: 1.5rem;
+      font-weight: 800;
+      letter-spacing: 0.5px;
+      background: linear-gradient(90deg, #0066cc, #00abec);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .clock-badge {
+      background: var(--card-bg);
+      padding: 0.75rem 1.5rem;
+      border-radius: 20px;
+      box-shadow: var(--clay-inset);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 700;
+      font-size: 1.1rem;
+      color: #1a365d;
+    }
+
+    .clock-badge i {
+      color: var(--primary);
+      animation: pulse 2s infinite;
+    }
+
+    /* OPERATIONAL STATUS BAR */
+    .status-bar {
+      background: var(--card-bg);
+      border-radius: 20px;
+      padding: 1rem 1.5rem;
+      box-shadow: var(--clay-shadow-sm);
+      margin-bottom: 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    .status-indicator {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 700;
+    }
+
+    .dot {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background-color: #cbd5e0;
+    }
+
+    .dot.active {
+      background-color: #48bb78;
+      box-shadow: 0 0 10px #48bb78;
+    }
+
+    .operating-hours {
+      color: var(--text-muted);
+      font-size: 0.95rem;
+      font-weight: 600;
+    }
+
+    /* HERO GRID */
+    .hero-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+    }
+
+    .clay-card {
+      background: var(--card-bg);
+      border-radius: var(--clay-card-radius);
+      box-shadow: var(--clay-shadow);
+      padding: 1.75rem;
+      position: relative;
+      transition: transform 0.3s ease;
+    }
+
+    .clay-card:hover {
+      transform: translateY(-4px);
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+    }
+
+    .card-title {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .card-icon {
+      width: 42px;
+      height: 42px;
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.2rem;
+      box-shadow: var(--clay-shadow-sm);
+    }
+
+    .stock-val {
+      font-size: 3rem;
+      font-weight: 800;
+      color: #2b6cb0;
+      margin-bottom: 0.5rem;
+    }
+
+    .progress-bar-container {
+      width: 100%;
+      height: 14px;
+      background: var(--card-bg);
+      box-shadow: var(--clay-inset);
+      border-radius: 10px;
+      overflow: hidden;
+      margin-top: 1rem;
+    }
+
+    .progress-bar {
+      height: 100%;
+      width: 100%;
+      background: linear-gradient(90deg, #00c6ff, #0088ff);
+      border-radius: 10px;
+      transition: width 0.8s ease;
+    }
+
+    /* DRIVER SECTION */
+    .section-title {
+      font-size: 1.25rem;
+      font-weight: 800;
+      margin-bottom: 1.25rem;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .drivers-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 1.5rem;
+    }
+
+    .driver-card {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .driver-info {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+
+    .driver-avatar {
+      width: 55px;
+      height: 55px;
+      border-radius: 20px;
+      box-shadow: var(--clay-shadow-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.4rem;
+      background: var(--card-bg);
+      color: var(--primary);
+    }
+
+    .driver-details h3 {
+      font-size: 1.15rem;
+      font-weight: 700;
+    }
+
+    .status-badge {
+      display: inline-block;
+      padding: 0.25rem 0.6rem;
+      border-radius: 10px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      margin-top: 4px;
+    }
+
+    .status-badge.working {
+      background: #e6fffa;
+      color: #234e52;
+      box-shadow: inset 2px 2px 4px #b2f5ea;
+    }
+
+    .status-badge.off {
+      background: #edf2f7;
+      color: #718096;
+    }
+
+    .driver-stats {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      background: var(--card-bg);
+      box-shadow: var(--clay-inset);
+      padding: 1rem;
+      border-radius: 18px;
+    }
+
+    .gallons-delivered {
+      font-size: 1.8rem;
+      font-weight: 800;
+      color: var(--primary);
+    }
+
+    .target-label {
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--text-muted);
+    }
+
+    @keyframes pulse {
+      0% { opacity: 1; }
+      50% { opacity: 0.4; }
+      100% { opacity: 1; }
+    }
+
+    @media (max-width: 600px) {
+      header {
+        flex-direction: column;
+        gap: 1rem;
+        align-items: flex-start;
+      }
+      .clock-badge {
+        width: 100%;
+        justify-content: center;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <!-- HEADER -->
+    <header>
+      <div class="brand">
+        <div class="brand-icon">
+          <i class="fa-solid fa-droplet"></i>
+        </div>
+        <div>
+          <h1>AQUATER</h1>
+          <p style="font-size: 0.75rem; font-weight: 700; color: var(--text-muted);">LIVE MONITORING SYSTEM</p>
+        </div>
+      </div>
+      <div class="clock-badge">
+        <i class="fa-regular fa-clock"></i>
+        <span id="realtime-clock">00:00:00 WIB</span>
+      </div>
+    </header>
+
+    <!-- OPERATIONAL STATUS BAR -->
+    <div class="status-bar">
+      <div class="status-indicator">
+        <div class="dot" id="status-dot"></div>
+        <span id="status-text">Memeriksa Status Depot...</span>
+      </div>
+      <div class="operating-hours">
+        <i class="fa-solid fa-door-open" style="margin-right: 6px; color: var(--primary);"></i>
+        Jam Operasional: <strong>07:45 - 19:45 WIB</strong>
+      </div>
+    </div>
+
+    <!-- MAIN METRICS -->
+    <div class="hero-grid">
+      <div class="clay-card">
+        <div class="card-header">
+          <span class="card-title">Sisa Stok Depot</span>
+          <div class="card-icon" style="color: #0088ff;"><i class="fa-solid fa-boxes-stacked"></i></div>
+        </div>
+        <div class="stock-val" id="depot-stock">230</div>
+        <p style="font-size: 0.85rem; font-weight: 600; color: var(--text-muted);">Dari total 230 Galon / Hari</p>
+        <div class="progress-bar-container">
+          <div class="progress-bar" id="stock-progress"></div>
+        </div>
+      </div>
+
+      <div class="clay-card">
+        <div class="card-header">
+          <span class="card-title">Total Terantar Hari Ini</span>
+          <div class="card-icon" style="color: #38a169;"><i class="fa-solid fa-truck-ramp-box"></i></div>
+        </div>
+        <div class="stock-val" style="color: #2f855a;" id="total-delivered">0</div>
+        <p style="font-size: 0.85rem; font-weight: 600; color: var(--text-muted);">Akumulasi seluruh tim antar</p>
+      </div>
+    </div>
+
+    <!-- TIM ANTERIN SECTION -->
+    <div class="section-title">
+      <i class="fa-solid fa-users" style="color: var(--primary);"></i>
+      Tim Pengantaran AQUATER
+    </div>
+
+    <div class="drivers-grid">
+
+      <!-- ALISBER -->
+      <div class="clay-card driver-card" id="card-alisber">
+        <div class="driver-info">
+          <div class="driver-avatar"><i class="fa-solid fa-user-ninja"></i></div>
+          <div class="driver-details">
+            <h3>Alisber</h3>
+            <span class="status-badge" id="badge-alisber">--</span>
+          </div>
+        </div>
+        <div class="driver-stats">
+          <div>
+            <div class="gallons-delivered" id="val-alisber">0</div>
+            <span style="font-size: 0.75rem; font-weight: 700; color: var(--text-muted);">Galon Terantar</span>
+          </div>
+          <div class="target-label">Target: 71 - 120</div>
+        </div>
+      </div>
+
+      <!-- JONATHAN -->
+      <div class="clay-card driver-card" id="card-jonathan">
+        <div class="driver-info">
+          <div class="driver-avatar"><i class="fa-solid fa-user-astronaut"></i></div>
+          <div class="driver-details">
+            <h3>Jonathan</h3>
+            <span class="status-badge" id="badge-jonathan">--</span>
+          </div>
+        </div>
+        <div class="driver-stats">
+          <div>
+            <div class="gallons-delivered" id="val-jonathan">0</div>
+            <span style="font-size: 0.75rem; font-weight: 700; color: var(--text-muted);">Galon Terantar</span>
+          </div>
+          <div class="target-label">Target: 70 - 101</div>
+        </div>
+      </div>
+
+      <!-- JERI -->
+      <div class="clay-card driver-card" id="card-jeri">
+        <div class="driver-info">
+          <div class="driver-avatar"><i class="fa-solid fa-user-tie"></i></div>
+          <div class="driver-details">
+            <h3>Jeri</h3>
+            <span class="status-badge" id="badge-jeri">--</span>
+          </div>
+        </div>
+        <div class="driver-stats">
+          <div>
+            <div class="gallons-delivered" id="val-jeri">0</div>
+            <span style="font-size: 0.75rem; font-weight: 700; color: var(--text-muted);">Galon Terantar</span>
+          </div>
+          <div class="target-label">Target: 60 - 95</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    // Config Data & Jadwal
+    const INITIAL_STOCK = 230;
+    const OPEN_TIME = { hours: 7, minutes: 45 };
+    const CLOSE_TIME = { hours: 19, minutes: 45 };
+
+    const driversConfig = {
+      alisber: {
+        name: "Alisber",
+        min: 71,
+        max: 120,
+        days: [1, 2, 3, 4, 6] // Senin-Kamis & Sabtu (0: Minggu, 1: Senin, DST)
+      },
+      jonathan: {
+        name: "Jonathan",
+        min: 70,
+        max: 101,
+        days: [1, 5, 6, 0] // Senin, Jumat, Sabtu, Minggu
+      },
+      jeri: {
+        name: "Jeri",
+        min: 60,
+        max: 95,
+        days: [2, 3, 4, 5, 0] // Selasa-Jumat & Minggu
+      }
+    };
+
+    // Fungsi Seeded Deterministic Pseudo-Random agar data konsisten tiap hari tapi tidak kaku
+    function getDailyTarget(driverKey, dateStr, min, max) {
+      let hash = 0;
+      const str = driverKey + dateStr;
+      for (let i = 0; i < str.length; i++) {
+        hash = str.charCodeAt(i) + ((hash << 5) - hash);
+      }
+      const norm = Math.abs(hash % 1000) / 1000;
+      return Math.floor(min + norm * (max - min + 1));
+    }
+
+    function updateDashboard() {
+      const now = new Date();
+      
+      // Update Clock UI
+      const timeString = now.toLocaleTimeString('id-ID', { hour12: false }) + ' WIB';
+      document.getElementById('realtime-clock').innerText = timeString;
+
+      const currentDay = now.getDay();
+      const year = now.getFullYear();
+      const month = String(now.getMonth() + 1).padStart(2, '0');
+      const day = String(now.getDate()).padStart(2, '0');
+      const dateStr = `${year}-${month}-${day}`;
+
+      // Perhitungan Jam Operasional Depot
+      const openTime = new Date(now);
+      openTime.setHours(OPEN_TIME.hours, OPEN_TIME.minutes, 0, 0);
+
+      const closeTime = new Date(now);
+      closeTime.setHours(CLOSE_TIME.hours, CLOSE_TIME.minutes, 0, 0);
+
+      const isOpen = now >= openTime && now <= closeTime;
+
+      // Update Operational Status Bar
+      const dot = document.getElementById('status-dot');
+      const statusText = document.getElementById('status-text');
+
+      if (isOpen) {
+        dot.classList.add('active');
+        statusText.innerText = 'Depot Buka (Pengantaran Berlangsung)';
+        statusText.style.color = '#276749';
+      } else {
+        dot.classList.remove('active');
+        statusText.innerText = now < openTime ? 'Depot Belum Buka' : 'Depot Sudah Tutup';
+        statusText.style.color = '#718096';
+      }
+
+      // Hitung Rasio Progres Waktu Kerja
+      let progress = 0;
+      if (now > closeTime) {
+        progress = 1;
+      } else if (now > openTime) {
+        progress = (now - openTime) / (closeTime - openTime);
+      }
+
+      let grandTotalDelivered = 0;
+
+      // Update Tiap Driver
+      Object.keys(driversConfig).forEach(key => {
+        const config = driversConfig[key];
+        const isWorkingDay = config.days.includes(currentDay);
+        const badgeEl = document.getElementById(`badge-${key}`);
+        const valEl = document.getElementById(`val-${key}`);
+        const cardEl = document.getElementById(`card-${key}`);
+
+        if (isWorkingDay) {
+          badgeEl.innerText = 'Bertugas Hari Ini';
+          badgeEl.className = 'status-badge working';
+          cardEl.style.opacity = '1';
+
+          // Target acak hari ini untuk driver
+          const dayTarget = getDailyTarget(key, dateStr, config.min, config.max);
+          
+          // Kurva non-linear halus menggunakan Math.sin untuk animasi real-time yang alami
+          let currentDelivered = 0;
+          if (progress > 0) {
+            const smoothFactor = Math.sin((progress * Math.PI) / 2);
+            currentDelivered = Math.floor(dayTarget * smoothFactor);
+            // Tambahkan variasi mikro detik agar dinamis
+            if (isOpen && currentDelivered < dayTarget) {
+              const microVariation = (now.getSeconds() % 7 === 0) ? 1 : 0;
+              currentDelivered = Math.min(dayTarget, currentDelivered + microVariation);
+            }
+          }
+
+          valEl.innerText = currentDelivered;
+          grandTotalDelivered += currentDelivered;
+        } else {
+          badgeEl.innerText = 'Libur';
+          badgeEl.className = 'status-badge off';
+          cardEl.style.opacity = '0.6';
+          valEl.innerText = '0';
+        }
+      });
+
+      // Update Stok Depot (Pengurangan Real-Time)
+      const currentStock = Math.max(0, INITIAL_STOCK - grandTotalDelivered);
+      document.getElementById('depot-stock').innerText = currentStock;
+      document.getElementById('total-delivered').innerText = grandTotalDelivered;
+
+      // Update Progress Bar Stok
+      const stockPercentage = (currentStock / INITIAL_STOCK) * 100;
+      const progressBar = document.getElementById('stock-progress');
+      progressBar.style.width = `${stockPercentage}%`;
+
+      if (stockPercentage < 20) {
+        progressBar.style.background = 'linear-gradient(90deg, #f56565, #e53e3e)';
+      } else {
+        progressBar.style.background = 'linear-gradient(90deg, #00c6ff, #0088ff)';
+      }
+    }
+
+    // Jalankan setiap 1 detik
+    setInterval(updateDashboard, 1000);
+    updateDashboard();
+  </script>
+</body>
+</html>
