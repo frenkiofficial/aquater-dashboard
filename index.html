@@ -40,7 +40,7 @@
 
     .app-container {
       width: 100%;
-      max-width: 480px; /* Lebar maksimal seukuran layar HP */
+      max-width: 480px;
       display: flex;
       flex-direction: column;
       gap: 1.2rem;
@@ -257,17 +257,65 @@
     }
 
     .gallons-delivered {
-      font-size: 1.4rem;
+      font-size: 1.6rem;
       font-weight: 800;
       color: var(--primary);
       line-height: 1;
     }
 
-    .target-label {
-      font-size: 0.65rem;
-      font-weight: 600;
+    .unit-label {
+      font-size: 0.7rem;
+      font-weight: 700;
       color: var(--text-muted);
-      margin-top: 2px;
+    }
+
+    /* RUNNING TEXT (PAPAN INFORMASI/BERITA) */
+    .news-ticker-card {
+      background: var(--card-bg);
+      border-radius: 18px;
+      box-shadow: var(--clay-shadow);
+      padding: 0.75rem 1rem;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      overflow: hidden;
+    }
+
+    .ticker-badge {
+      background: linear-gradient(135deg, #0088ff, #00c6ff);
+      color: white;
+      font-size: 0.7rem;
+      font-weight: 800;
+      padding: 0.35rem 0.65rem;
+      border-radius: 10px;
+      white-space: nowrap;
+      box-shadow: 2px 2px 6px rgba(0, 136, 255, 0.3);
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .ticker-wrapper {
+      width: 100%;
+      overflow: hidden;
+      box-shadow: var(--clay-inset);
+      border-radius: 10px;
+      padding: 0.4rem 0.6rem;
+      background: var(--card-bg);
+    }
+
+    .ticker-text {
+      display: inline-block;
+      white-space: nowrap;
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: var(--text-main);
+      animation: marquee 22s linear infinite;
+    }
+
+    @keyframes marquee {
+      0% { transform: translateX(100%); }
+      100% { transform: translateX(-100%); }
     }
   </style>
 </head>
@@ -302,7 +350,7 @@
       </div>
     </div>
 
-    <!-- METRICS 2 KOLOM (SEJAJAR DI HP) -->
+    <!-- METRICS 2 KOLOM -->
     <div class="metrics-row">
       <div class="clay-card">
         <div class="card-title">Sisa Stok</div>
@@ -337,7 +385,7 @@
         </div>
         <div class="driver-right">
           <div class="gallons-delivered" id="val-alisber">0</div>
-          <div class="target-label">Target: 71-120</div>
+          <div class="unit-label">Galon</div>
         </div>
       </div>
 
@@ -352,7 +400,7 @@
         </div>
         <div class="driver-right">
           <div class="gallons-delivered" id="val-jonathan">0</div>
-          <div class="target-label">Target: 70-101</div>
+          <div class="unit-label">Galon</div>
         </div>
       </div>
 
@@ -367,10 +415,23 @@
         </div>
         <div class="driver-right">
           <div class="gallons-delivered" id="val-jeri">0</div>
-          <div class="target-label">Target: 60-95</div>
+          <div class="unit-label">Galon</div>
         </div>
       </div>
     </div>
+
+    <!-- KOLOM INFORMASI / BERITA BERJALAN (RUNNING TEXT) -->
+    <div class="news-ticker-card">
+      <div class="ticker-badge">
+        <i class="fa-solid fa-bullhorn"></i> INFO AQUATER
+      </div>
+      <div class="ticker-wrapper">
+        <div class="ticker-text">
+          🌊 Selamat Datang di AQUATER Live Monitoring System! &nbsp;&bull;&nbsp; 🚀 Layanan pengantaran air minum bersih cepat & terpercaya. &nbsp;&bull;&nbsp; 💧 Kualitas air teruji higienis & murni setiap hari. &nbsp;&bull;&nbsp; 📦 Layanan langganan galon praktis siap antar langsung ke alamat Anda!
+        </div>
+      </div>
+    </div>
+
   </div>
 
   <script>
@@ -384,6 +445,7 @@
       jeri: { name: "Jeri", min: 60, max: 95, days: [2, 3, 4, 5, 0] }
     };
 
+    // Algoritma simulasi penambahan acak yang natural & konsisten sepanjang jam operasional
     function getDailyTarget(driverKey, dateStr, min, max) {
       let hash = 0;
       const str = driverKey + dateStr;
@@ -392,6 +454,23 @@
       }
       const norm = Math.abs(hash % 1000) / 1000;
       return Math.floor(min + norm * (max - min + 1));
+    }
+
+    function getNaturalProgressCount(target, progress, driverKey, nowSeconds) {
+      if (progress <= 0) return 0;
+      if (progress >= 1) return target;
+
+      // Kurva dasar pergerakan pengantaran harian
+      const baseCurve = Math.pow(progress, 0.85);
+      let current = Math.floor(target * baseCurve);
+
+      // Fluktuasi acak mikro per menit (noise) agar perambahan terlihat tidak monoton seperti bot
+      const noiseSeed = (nowSeconds + driverKey.charCodeAt(0)) % 13;
+      if (noiseSeed > 8 && current < target) {
+        current = Math.min(target, current + 1);
+      }
+
+      return current;
     }
 
     function updateDashboard() {
@@ -446,16 +525,7 @@
           cardEl.style.opacity = '1';
 
           const dayTarget = getDailyTarget(key, dateStr, config.min, config.max);
-          
-          let currentDelivered = 0;
-          if (progress > 0) {
-            const smoothFactor = Math.sin((progress * Math.PI) / 2);
-            currentDelivered = Math.floor(dayTarget * smoothFactor);
-            if (isOpen && currentDelivered < dayTarget) {
-              const microVariation = (now.getSeconds() % 7 === 0) ? 1 : 0;
-              currentDelivered = Math.min(dayTarget, currentDelivered + microVariation);
-            }
-          }
+          const currentDelivered = getNaturalProgressCount(dayTarget, progress, key, now.getSeconds());
 
           valEl.innerText = currentDelivered;
           grandTotalDelivered += currentDelivered;
